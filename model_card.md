@@ -125,7 +125,7 @@ How *convincing* the output looks just because each song has a list of reasons. 
 
 ---
 
-# 9. Personal Reflection
+## 9. Personal Reflection
 
 **Biggest learning moment:** I didn't realize at first that scoring and ranking are two separate steps. `score_song()` only looks at one song at a time, so it has no idea what else is in the list. That's why the diversity penalty has to happen in the ranking step: whether a song counts as a "repeat artist" depends on what's already been picked. Once I saw that, the structure of the code made a lot more sense to me.
 
