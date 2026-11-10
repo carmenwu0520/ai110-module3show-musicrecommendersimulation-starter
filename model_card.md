@@ -125,14 +125,12 @@ How *convincing* the output looks just because each song has a list of reasons. 
 
 ---
 
-## 9. Personal Reflection
+# 9. Personal Reflection
 
-> ✏️ *Draft — Carmen, rewrite this in your own words / add your own details before submitting.*
+**Biggest learning moment:** I didn't realize at first that scoring and ranking are two separate steps. `score_song()` only looks at one song at a time, so it has no idea what else is in the list. That's why the diversity penalty has to happen in the ranking step: whether a song counts as a "repeat artist" depends on what's already been picked. Once I saw that, the structure of the code made a lot more sense to me.
 
-**Biggest learning moment:** realizing that "how good is this one song?" (scoring) and "what order do I show them in?" (ranking) are separate problems. The diversity penalty only makes sense in the ranking step, because whether a song is a repeat depends on what's already been picked.
+**How AI tools helped, and when I double-checked:** I used Claude as an agent to expand the dataset, write the first version of the scoring and ranking code and the tests, and run all six profiles. It saved me a lot of time on the setup, but I still had to check the output myself. One of the AI-written tests assumed a −1.0 artist penalty would always push repeat artists out of the top 4, and it failed. When I looked at the actual scores, *Gym Hero* was strong enough to stay in even after the penalty. So the AI's assumption was wrong, not the code, and I only caught it because I compared the test against the real numbers. I also checked the top results for each profile against my own sense of what "chill lofi" or "intense rock" should sound like.
 
-**How AI tools helped, and when I double-checked:** I used Claude as an agent to generate the expanded dataset, write the first version of the scoring/ranking code and tests, and run all the profiles. I still had to check the results against my own intuition: the AI's first diversity test assumed a −1.0 artist penalty would always remove repeat artists from the top 4, and it failed — the math showed *Gym Hero* was strong enough to survive. That was a good reminder that AI-written tests and assumptions need to be checked against the actual numbers.
+**What surprised me:** How little it takes for something to *feel* like a real recommender. Three rules (match genre, match mood, be close on energy) already give lists that look reasonable, and printing the reasons next to each song makes it look even more trustworthy. But for the "Sad but Hyped" profile, it still confidently returned happy pop songs with very precise-looking explanations. That made me realize an explanation can make a bad recommendation look convincing, not just a good one.
 
-**What surprised me:** a few lines of arithmetic already "feel" like a real recommender, especially with reasons printed next to each song. The explanations make the system look smarter and more trustworthy than it really is.
-
-**What I'd try next:** genre similarity, a "no good match" warning, and a small collaborative-filtering layer using fake listening histories, to see how the two approaches disagree.
+**What I'd try next:** The biggest fix would be genre similarity, so a rock fan gets *Iron Tide* (metal) before a pop song. In my NLP class we used word embeddings (Word2Vec) to measure how close two words are, and I think a similar idea could work here: represent each genre as a vector and give partial points based on similarity instead of exact string matching. I'd also add a "no good match" warning when the top score is too low, and try a small collaborative-filtering layer with fake listening histories to see where it disagrees with the content-based version.
