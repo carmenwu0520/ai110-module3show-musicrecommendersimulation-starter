@@ -59,3 +59,49 @@ def test_explain_recommendation_returns_non_empty_string():
     explanation = rec.explain_recommendation(user, song)
     assert isinstance(explanation, str)
     assert explanation.strip() != ""
+
+
+# ---------------------------------------------------------------------------
+# Tests for the functional API (load_songs / score_song / recommend_songs)
+# ---------------------------------------------------------------------------
+from src.recommender import load_songs, score_song, recommend_songs
+
+
+def test_load_songs_converts_numbers():
+    songs = load_songs("data/songs.csv")
+    assert len(songs) >= 20
+    assert isinstance(songs[0]["energy"], float)
+    assert isinstance(songs[0]["popularity"], int)
+
+
+def test_score_song_returns_score_and_reasons():
+    song = {"genre": "pop", "mood": "happy", "energy": 0.8, "acousticness": 0.2}
+    score, reasons = score_song({"genre": "pop", "mood": "happy", "energy": 0.8}, song)
+    assert score == 4.5  # 2.0 genre + 1.0 mood + 1.5 perfect energy
+    assert any("genre match" in r for r in reasons)
+
+
+def test_energy_rewards_closeness_not_just_higher():
+    prefs = {"energy": 0.4}
+    close, _ = score_song(prefs, {"genre": "x", "mood": "y", "energy": 0.45})
+    far, _ = score_song(prefs, {"genre": "x", "mood": "y", "energy": 0.95})
+    assert close > far
+
+
+def test_recommend_songs_sorted_high_to_low_for_every_profile():
+    from src.main import PROFILES
+    songs = load_songs("data/songs.csv")
+    for prefs in PROFILES.values():
+        for mode in ("genre", "mood", "energy"):
+            recs = recommend_songs(prefs, songs, k=5, mode=mode)
+            scores = [score for _, score, _ in recs]
+            assert len(recs) == 5
+            assert scores == sorted(scores, reverse=True)
+
+
+def test_diversity_penalty_avoids_repeat_artists_in_top_picks():
+    songs = load_songs("data/songs.csv")
+    prefs = {"genre": "pop", "mood": "happy", "energy": 0.85, "likes_acoustic": False}
+    plain = [s["artist"] for s, _, _ in recommend_songs(prefs, songs, k=5)]
+    diverse = [s["artist"] for s, _, _ in recommend_songs(prefs, songs, k=5, diversity=True)]
+    assert len(set(diverse)) > len(set(plain))
